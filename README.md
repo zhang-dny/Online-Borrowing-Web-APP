@@ -1,2 +1,3 @@
-# Online-Borrowing-Web-APP
-This is a project made by a team of 5. It allows users to lend and borrow educational supplies. The project is made using Django framework, PostreSQL Databse, and AWS. Languages that were used includes, CSS, HTML, JS, and Python. 
+[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/hLqvXyMi)
+
+SITE_ID should always be 9 when pushing

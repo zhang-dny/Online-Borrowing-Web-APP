@@ -1,0 +1,525 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Collections</title>
+    <link rel="stylesheet" href="{% static 'myapp/styles.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+                background-color: #f8f9fa;
+            }
+        .header-bar {
+            background-color: #1c1c1c;
+            padding: 10px 30px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            color: white;
+        }
+        .catalog-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .catalog-item {
+            border: 1px solid #ccc;
+            padding: 15px;
+            width: 200px;
+            box-shadow: 1px 1px 5px #ddd;
+            border-radius: 5px;
+        }
+
+        .product-image {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+    </style>
+</head>
+<body>
+    {% if request.user.is_authenticated %}
+    <a href="{% url 'profile_update' %}" style="position:absolute; top:1rem; right:1rem; z-index:1000;">
+      {% if request.user.profile.profile_pic %}
+        <img src="{{ request.user.profile.profile_pic.url }}" alt="Profile"
+             style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid #fff;">
+      {% else %}
+        <img src="{% static 'myapp/default_blank_profile.png' %}" alt="Default Profile"
+             style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid #fff;">
+      {% endif %}
+    </a>
+  {% endif %}
+
+  <!-- patron -->
+{% if user.is_authenticated and is_patron %}
+  {% include 'patronnavbar.html' %}
+<!-- librarian -->
+{% elif request.user.is_authenticated and is_librarian %} 
+  {% include 'navbar.html' %}
+<!-- anon user -->
+{% else %} 
+  {% include 'anonnavbar.html' %}
+{% endif %}
+
+  
+<div class="header-bar">
+    <div class="container mt-4">
+        <h1>Collections</h1>
+    </div>
+</div>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <a href="{% url 'catalog' %}" class="btn btn-secondary me-2">Back to Catalog</a>
+            {% if user.is_authenticated %}
+            <a href="{% url 'redirect_user' %}" class="btn btn-secondary">Back to Home</a>
+            {% else %}
+            <a href="{% url 'account_login' %}" class="btn btn-secondary">Login</a>
+            {% endif %}
+        </div>
+        <!-- {% if user.is_authenticated %}
+        <a href="{% url 'account_logout' %}" class="btn btn-danger">Logout</a>
+        {% endif %} -->
+    </div>
+
+    <!-- Search -->
+    <form method="get" class="mb-4">
+        <div class="row g-3">
+            <div class="col-md-10">
+                <input type="text" name="q" class="form-control" placeholder="Search by title or description" value="{{ query }}">
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100">Search</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Collections -->
+    <div class="row">
+        {% for collection in collections %}
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100">
+                        <div class="card-body d-flex flex-column">
+                            {% if collection.is_public %}
+                                <h5 class="card-title">{{ collection.title }}</h5>
+                                <p class="card-text">{{ collection.description|truncatewords:30 }}</p>
+                                <p class="text-muted">{{ collection.item_count  }} item{{ collection.item_count |pluralize }}</p>
+
+                                <a href="{% url 'collection_items' collection.id %}" class="btn btn-primary mt-auto">View Items</a>
+                            {% endif %}
+                            
+                            
+                            {% if not collection.is_public %}
+                                <h5 class="card-title">{{ collection.title }}</h5>
+                                <p><em>Private Collection</em></p>
+                                {% if user.is_authenticated %}
+                                    {% if collection.access_granted %}
+                                        <button class="btn btn-success mt-auto" disabled>Access Granted</button>
+                                        <a href="{% url 'collection_items' collection.id %}" class="btn btn-primary mt-auto">View Items</a>
+                                    {% elif is_librarian %}
+                                        <a href="{% url 'collection_items' collection.id %}" class="btn btn-primary mt-auto">View Items</a>
+                                    {% elif collection.existing_request %}
+                                        {% if collection.existing_request.approved %}
+                                            <button class="btn btn-success mt-auto" disabled>Access Granted</button>
+                                            <a href="{% url 'collection_items' collection.id %}" class="btn btn-primary mt-auto">View Items</a>
+                                        {% else %}
+                                            <button class="btn btn-secondary mt-auto" disabled>Pending</button>
+                                        {% endif %}
+                                    {% else %}
+                                        <form method="POST" action="{% url 'request-access' collection.id %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-primary mt-auto">Request Access</button>
+                                        </form>
+                                    {% endif %}
+                                {% elif not user.is_authenticated %}
+                                    <button class="btn btn-secondary mt-auto" disabled>Log in to request access</button>
+                                {% else %}
+                                    <a href="{% url 'collection_items' collection.id %}" class="btn btn-primary mt-auto">View Items</a>
+                                {% endif %}
+                            {% endif %}
+
+                            {% if collection.created_by == request.user %}
+                                <div class="mt-3">
+                                    <a href="{% url 'edit_collection' collection.id %}" class="btn btn-warning btn-sm">Edit</a>
+                                    <a href="{% url 'delete_collection' collection.id %}" class="btn btn-danger btn-sm">Delete</a>
+                                </div>
+                            {% endif %}
+
+                            {% if is_librarian and collection.created_by != request.user %}
+                            <div class="mt-3">
+                                <a href="{% url 'edit_collection_librarian' collection.id %}" class="btn btn-warning btn-sm">Edit</a>
+                                <a href="{% url 'delete_collection_librarian' collection.id %}" class="btn btn-danger btn-sm">Delete</a>
+                            </div>
+                            {% endif %}
+
+                        </div>
+                    </div>
+                </div>
+        {% empty %}
+        <div class="col-12">
+            <p>No collections found.</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Navigation Buttons -->
+    <div class="mt-3">
+        {% if user.is_authenticated %}
+        <button id="openCollectionModal" class="btn btn-primary mb-4">+ Create Collection</button>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- Modal for Create Collection -->
+
+<div id="collectionModal" class="modal" style="display: none;">
+    <div class="modal-content p-4">
+        <span class="close" id="closeCollectionModal">&times;</span>
+        <h2>Create Collection</h2>
+
+        {% if is_patron %}
+            <form id="collectionForm-patron" method="POST" action="{% url 'create-patron-collection' %}">
+                {% csrf_token %}
+
+                <div class="form-group mb-3">
+                    <label for="title-patron">Title:</label>
+                    <input type="text" name="title" id="title-patron" class="form-control" required>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="description-patron">Description:</label>
+                    <textarea name="description" id="description-patron" class="form-control" required></textarea>
+                </div>
+
+                <input type="hidden" name="is_public" value="True">
+
+                <div class="form-group mb-3">
+                    <label>Select Items to Add:</label>
+                    {% for item in catalog_items %}
+                    <div class="form-check">
+                        <input type="checkbox" name="items" value="{{ item.identifier }}" id="item-{{ item.identifier }}-patron" class="form-check-input">
+                        <label class="form-check-label" for="item-{{ item.identifier }}-patron">{{ item.title }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-actions mt-3">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">Create</button>
+                    <button type="button" id="cancelModal-patron" class="btn btn-secondary">Cancel</button>
+                </div>
+            </form>
+        {% elif is_librarian %}
+            <form id="collectionForm-librarian" method="POST" action="{% url 'add-collection' %}">
+                {% csrf_token %}
+                <div class="form-group mb-3">
+                    <label for="title-librarian">Title:</label>
+                    <input type="text" name="title" id="title-librarian" class="form-control" required>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label for="description-librarian">Description:</label>
+                    <input type="text" name="description" id="description-librarian" class="form-control" required>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label>Collection Visibility:</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="is_public" id="public" value="True" checked>
+                        <label class="form-check-label" for="public">Public (Anyone can see)</label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="is_public" id="private" value="False">
+                        <label class="form-check-label" for="private">Private (Request access required)</label>
+                    </div>
+                </div>
+
+                <div class="form-group mb-3" id="visible-to-users-container" style="display:none;">
+                    <label>Select users who can view this collection:</label>
+                    {% for user in all_users %}
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="visible_to_users" value="{{ user.id }}" id="user-{{ user.id }}">
+                        <label class="form-check-label" for="user-{{ user.id }}">{{ user.username }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-group mb-3">
+                    <label>Select Items to Add:</label>
+                    {% for item in catalog_items %}
+                    <div class="form-check">
+                        <input type="checkbox" name="items" value="{{ item.identifier }}" id="item-{{ item.identifier }}-librarian" class="form-check-input">
+                        <label class="form-check-label" for="item-{{ item.identifier }}-librarian">{{ item.title }}</label>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="form-actions mt-3">
+                    <button type="submit" class="btn btn-success">Create</button>
+                    <button type="button" id="cancelModal-librarian" class="btn btn-secondary">Cancel</button>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+</div>
+<!-- 
+{% if is_patron %}
+<div id="collectionModal" class="modal" style="display: none;">
+    <div class="modal-content p-4">
+        <span class="close" id="closeCollectionModal">&times;</span>
+        <h2>Create Collection</h2>
+
+        <form method="POST" action="{% url 'create-patron-collection' %}">
+            {% csrf_token %}
+
+            <div class="form-group mb-3">
+                <label for="title">Title:</label>
+                <input type="text" name="title" id="title" class="form-control" required>
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="description">Description:</label>
+                <textarea name="description" id="description" class="form-control" required></textarea>
+            </div>
+
+            <input type="hidden" name="is_public" value="True">
+
+            <div class="form-group mb-3">
+                <label>Select Items to Add:</label>
+                {% for item in catalog_items %}
+                <div class="form-check">
+                    <input type="checkbox" name="items" value="{{ item.identifier }}" id="item-{{ item.identifier }}" class="form-check-input">
+                    <label class="form-check-label" for="item-{{ item.identifier }}">{{ item.title }}</label>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="form-actions mt-3">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success">Create</button>
+                <button type="button" id="cancelModal" class="btn btn-secondary">Cancel</button>
+            </div>
+        </form> -->
+        <!-- {% elif is_librarian %} -->
+        <!-- <form method="POST" action="{% url 'add-collection' %}">
+            {% csrf_token %}
+            <div class="form-group mb-3">
+                <label for="title">Title:</label>
+                <input type="text" name="title" id="title" class="form-control" required>
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="description">Description:</label>
+                <textarea name="description" id="description" class="form-control" required></textarea>
+            </div>
+
+            <div class="form-group mb-3">
+                <label for="is_public">Is Public:</label>
+                <input type="checkbox" name="is_public" id="is_public" class="form-check-input">
+            </div>
+
+            <div class="form-group mb-3">
+                <label>Select Items to Add:</label>
+                {% for item in catalog_items %}
+                <div class="form-check">
+                    <input type="checkbox" name="items" value="{{ item.identifier }}" id="item-{{ item.identifier }}" class="form-check-input">
+                    <label class="form-check-label" for="item-{{ item.identifier }}">{{ item.title }}</label>
+                </div>
+            {% endfor %}
+        </div>
+
+        <div class="form-actions mt-3">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">Create</button>
+            <button type="button" id="cancelModal" class="btn btn-secondary">Cancel</button>
+        </div>
+        </form> -->
+    <!-- </div>
+</div>
+
+{% elif is_librarian %}
+<div id="collectionModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close" id="closeCollectionModal">&times;</span>
+        <h2>Create Collection</h2>
+        <form method="POST" action="{% url 'add-collection' %}">
+            {% csrf_token %}
+            <input type="hidden" name="created_by" value="{{ request.user.id }}">
+
+            {% if collection_form.non_field_errors %}
+            <div class="form-error">{{ collection_form.non_field_errors }}</div>
+            {% endif %}
+
+            {% if collection_form.errors %}
+            <div id="popupError" class="popup-error">
+                Please fix the form errors below.
+            </div>
+            {% endif %}
+
+            <p>{{ collection_form.title.label_tag }}<br>{{ collection_form.title }}{{ collection_form.title.errors }}</p>
+            <p>{{ collection_form.description.label_tag }}<br>{{ collection_form.description }}{{ collection_form.description.errors }}</p>
+            <p>{{ collection_form.is_public.label_tag }}<br>{{ collection_form.is_public }}{{ collection_form.is_public.errors }}</p>
+            <p>{{ collection_form.items.label_tag }}<br>{{ collection_form.items }}{{ collection_form.items.errors }}</p>
+            <p>{{ collection_form.visible_to_users.label_tag }}<br>{{ collection_form.visible_to_users }}{{ collection_form.visible_to_users.errors }}</p>
+
+            <button type="submit">Create</button>
+        </form>
+    </div>
+</div>
+{% endif %} -->
+
+<!-- Modal JavaScript -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const modal = document.getElementById("collectionModal");
+        const openBtn = document.getElementById("openCollectionModal");
+        const closeBtn = document.getElementById("closeCollectionModal");
+        const cancelBtnPatron = document.getElementById("cancelModal-patron");
+        const cancelBtnLibrarian = document.getElementById("cancelModal-librarian");
+
+        openBtn.onclick = () => modal.style.display = "block";
+        closeBtn.onclick = () => modal.style.display = "none";
+        if (cancelBtnPatron) {
+            cancelBtnPatron.onclick = () => modal.style.display = "none";
+        }
+
+        if (cancelBtnLibrarian) {
+            cancelBtnLibrarian.onclick = () => modal.style.display = "none";
+        }
+
+        window.onclick = (event) => {
+            if (event.target === modal) {
+                modal.style.display = "none";
+            }
+        };
+    });
+</script>
+
+{% include 'footer.html' %}
+
+<script src="{% static 'myapp/scripts.js' %}"></script>
+
+<script>
+    var itemModal = document.getElementById("modal");
+    var openItemModal = document.getElementById("openModal");
+    var closeItemModal = document.getElementById("closeItemModal");
+
+    openItemModal.onclick = function () {
+        itemModal.style.display = "block";
+    }
+    closeItemModal.onclick = function () {
+        itemModal.style.display = "none";
+    }
+
+    var collectionModal = document.getElementById("collectionModal");
+    var openCollectionModal = document.getElementById("openCollectionModal");
+    var closeCollectionModal = document.getElementById("closeCollectionModal");
+    var cancelModalPatron = document.getElementById("cancelModal-patron");
+    var cancelModalLibrarian = document.getElementById("cancelModal-librarian");
+
+    // For patron modal actions
+    if (openCollectionModal) {
+        openCollectionModal.onclick = function () {
+            collectionModal.style.display = "block";
+        }
+    }
+    if (closeCollectionModal) {
+        closeCollectionModal.onclick = function () {
+            collectionModal.style.display = "none";
+        }
+    }
+    if (cancelModalPatron) {
+        cancelModalPatron.onclick = function () {
+            collectionModal.style.display = "none";
+        }
+    }
+
+    // For librarian modal actions
+    if (cancelModalLibrarian) {
+        cancelModalLibrarian.onclick = function () {
+            collectionModal.style.display = "none";
+        }
+    }
+
+    // Close modals when clicking outside of them
+    window.onclick = function (event) {
+        if (event.target === itemModal) {
+            itemModal.style.display = "none";
+        }
+        if (event.target === collectionModal) {
+            collectionModal.style.display = "none";
+        }
+    }
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const patronForm = document.getElementById('collectionForm-patron');
+        const librarianForm = document.getElementById('collectionForm-librarian');
+
+        if (patronForm) {
+            patronForm.addEventListener('submit', function(event) {
+                const checkedItems = patronForm.querySelectorAll('input[name="items"]:checked');
+                if (checkedItems.length === 0) {
+                    event.preventDefault();
+                    alert('Please select at least one item to add to the collection.');
+                }
+            });
+        }
+
+        if (librarianForm) {
+            librarianForm.addEventListener('submit', function(event) {
+                const checkedItems = librarianForm.querySelectorAll('input[name="items"]:checked');
+                if (checkedItems.length === 0) {
+                    event.preventDefault();
+                    alert('Please select at least one item to add to the collection.');
+                }
+            });
+        }
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const publicRadio = document.getElementById('public');
+        const privateRadio = document.getElementById('private');
+        const visibleToUsersContainer = document.getElementById('visible-to-users-container');
+
+        function toggleVisibleToUsers() {
+            if (privateRadio.checked) {
+                visibleToUsersContainer.style.display = 'block';
+            } else {
+                visibleToUsersContainer.style.display = 'none';
+            }
+        }
+
+        publicRadio.addEventListener('change', toggleVisibleToUsers);
+        privateRadio.addEventListener('change', toggleVisibleToUsers);
+
+        toggleVisibleToUsers(); // Initial state
+    });
+</script>
+</body>
+</html>

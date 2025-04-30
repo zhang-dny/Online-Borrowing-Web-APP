@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Complete Your Profile</title>
+</head>
+<body>
+    <h1>Complete Your Profile</h1>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <label for="real_name">Full Name:</label>
+        <input type="text" id="real_name" name="real_name" required><br><br>
+
+        <label for="profile_pic">Profile Picture (optional):</label>
+        <input type="file" id="profile_pic" name="profile_pic"><br><br>
+
+        <button type="submit">Save Profile</button>
+    </form>
+</body>
+</html>

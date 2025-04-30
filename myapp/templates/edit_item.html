@@ -1,0 +1,204 @@
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Edit Item</title>
+    <link rel="stylesheet" href="{% static 'myapp/styles.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"],
+        input[type="file"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        button[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-5">
+    <h1>Edit Item: {{ item.title }}</h1>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="form-group mb-3">
+            <label>Title:</label>
+            {{ form.title }}
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Description:</label>
+            {{ form.description }}
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Availability:</label>
+            {{ form.availability }}
+        </div>
+
+        <div class="form-group mb-3">
+            <label>Location:</label>
+            {{ form.location }}
+        </div>
+
+        <div class="form-group mb-4">
+            <label for="image">Main Image:</label>
+            <input type="file" id="image" name="image" accept="image/*">
+            <div id="main-image-preview" class="mt-2">
+                {% if item.image %}
+                <img src="{{ item.image.url }}" class="img-thumbnail" style="width: 120px; height: 120px;">
+                {% endif %}
+            </div>
+        </div>
+
+        <hr>
+
+        <!-- Existing Extra Images -->
+        <div class="form-group mb-4">
+            <div class="mb-3">
+                <label>Existing Extra Images:</label><br>
+                {% if extra_images %}
+                <div id="existing-extra-images">
+                    {% for img in extra_images %}
+                    <div class="d-inline-block me-2 mb-2 text-center image-wrapper" data-image-id="{{ img.id }}">
+                        <img src="{{ img.extra_image.url }}" class="img-thumbnail" style="width: 100px; height: 100px;">
+                        <button type="button" class="btn btn-sm btn-danger mt-1 remove-existing" data-image-id="{{ img.id }}">Remove</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p>No extra images uploaded.</p>
+                {% endif %}
+            </div>
+        </div>
+
+
+        <hr>
+
+        <h4>Add New Extra Images</h4>
+        <div id="extra-images-container" class="mb-2"></div>
+        <button type="button" class="btn btn-secondary btn-sm mt-2" id="extra_image">+ Add Image</button>
+        <div id="hidden-file-inputs" style="display:none;"></div>
+
+        <hr>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+    </form>
+
+    <a href="{% url 'catalog' %}" class="btn btn-secondary mt-3">← Back to Catalog</a>
+</div>
+
+<!-- Image Preview Script -->
+<script>
+    // Preview for main image
+    document.getElementById('image').addEventListener('change', function (e) {
+        const previewContainer = document.getElementById('main-image-preview');
+        previewContainer.innerHTML = '';
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const img = document.createElement('img');
+                img.src = event.target.result;
+                img.className = 'img-thumbnail mt-2';
+                img.style.width = '120px';
+                img.style.height = '120px';
+                previewContainer.appendChild(img);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    // Extra images uploader
+    let extraImageCounter = 0;
+
+    document.getElementById('extra_image').addEventListener('click', () => {
+        const inputId = `extra_image_${extraImageCounter}`;
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'file';
+        hiddenInput.name = 'extra_image';
+        hiddenInput.accept = 'image/*';
+        hiddenInput.style.display = 'none';
+        hiddenInput.id = inputId;
+
+        hiddenInput.addEventListener('change', function () {
+            const file = hiddenInput.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (event) {
+                    const previewWrapper = document.createElement('div');
+                    previewWrapper.className = 'd-inline-block me-2 mb-2 text-center';
+                    previewWrapper.style.position = 'relative';
+
+                    const img = document.createElement('img');
+                    img.src = event.target.result;
+                    img.className = 'img-thumbnail';
+                    img.style.width = '100px';
+                    img.style.height = '100px';
+
+                    const removeBtn = document.createElement('button');
+                    removeBtn.textContent = 'Remove';
+                    removeBtn.type = 'button';
+                    removeBtn.className = 'btn btn-sm btn-danger mt-1';
+                    removeBtn.onclick = function () {
+                        previewWrapper.remove();
+                        hiddenInput.remove();
+                    };
+
+                    previewWrapper.appendChild(img);
+                    previewWrapper.appendChild(removeBtn);
+                    document.getElementById('extra-images-container').appendChild(previewWrapper);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('hidden-file-inputs').appendChild(hiddenInput);
+        hiddenInput.click();
+        extraImageCounter++;
+    });
+    // Handle removal of existing extra images
+    document.querySelectorAll('.remove-existing').forEach(button => {
+        button.addEventListener('click', function () {
+            const imageId = this.dataset.imageId;
+            const imageWrapper = document.querySelector(`.image-wrapper[data-image-id="${imageId}"]`);
+            if (imageWrapper) {
+                imageWrapper.remove();
+
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'remove_extra_image';
+                input.value = imageId;
+                document.querySelector('form').appendChild(input);
+            }
+        });
+    });
+</script>
+</body>
+</html>

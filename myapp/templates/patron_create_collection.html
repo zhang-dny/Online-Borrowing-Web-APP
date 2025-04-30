@@ -1,0 +1,59 @@
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Collection</title>
+    <link rel="stylesheet" href="{% static 'myapp/styles.css' %}">
+</head>
+<body>
+
+<div class="container">
+    <h2>Create a New Collection</h2>
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="POST" action="{% url 'create-patron-collection' %}">
+        {% csrf_token %}
+
+        <input type="hidden" name="created_by" value="{{ request.user.id }}">
+
+        <div class="form-group">
+            <label for="title">Collection Title:</label>
+            <input type="text" id="title" name="title" placeholder="Enter collection title" required>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description:</label>
+            <textarea id="description" name="description" placeholder="Description about the collection" required></textarea>
+        </div>
+
+        <!-- Patron collections are always public -->
+        <input type="hidden" name="is_public" value="True">
+
+        <div class="form-group">
+            <label for="items">Select Items:</label>
+            <select name="items" id="items" multiple>
+                {% for item in items %}
+                <option value="{{ item.id }}">{{ item.title }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit">Create Collection</button>
+            <a href="{% url 'patron-catalog' %}" class="btn-secondary">Back to Catalog</a>
+        </div>
+    </form>
+</div>
+
+</body>
+</html>

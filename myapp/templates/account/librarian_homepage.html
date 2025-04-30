@@ -1,0 +1,170 @@
+{% load static %}
+<html>
+<head>
+    <title>Librarian Homepage</title>
+    <link rel="stylesheet" href="{% static 'myapp/styles.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .card {
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        .btn-primary, .btn-secondary {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 10px 20px;
+            background-color: #000000;
+            border-color: #000000;
+            color: white;
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+        .btn-primary:hover, .btn-secondary:hover {
+            background-color: #28a745;
+            border-color: #28a745;
+            color: white;
+        }
+        .btn-logout {
+        font-size: 0.9rem;
+        padding: 4px 10px;
+    }
+        .avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 10px;
+            border: 2px solid #dee2e6;
+            box-shadow: 0 0 8px rgba(40, 167, 69, 0.5); 
+        }
+        .header-bar {
+            background: linear-gradient(90deg, #1c1c1c 0%, #2e2e2e 100%);
+            padding: 20px 30px;
+            height: 180px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            color: white;
+        }
+        .shuffle-up {
+            margin-top: -70px;
+            z-index: 2;
+            background-color: white;
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .shuffle-up:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+        .card-title {
+            font-weight: 600;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        .card-text {
+            color: #6c757d;
+            font-size: 0.95rem;
+        }
+        .d-flex.w-100 {
+            gap: 32px;
+            margin-top: 20px;
+        }
+        .card-body {
+            text-align: center;
+        }
+        /* Center profile info in shuffle-up card */
+        .shuffle-up .d-flex {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body class="d-flex flex-column min-vh-100">
+    {% include 'navbar.html' %}
+
+    <div class="header-bar"></div>
+
+    <div class="d-flex flex-column align-items-center w-75 mx-auto">
+
+        <!-- profile card -->
+        <div class="card p-3 w-50 mb-4 shuffle-up">
+            <div class="d-flex align-items-center">
+                {% if profile.profile_pic %}
+                    <img src="{{ profile.profile_pic.url }}" class="avatar">
+                {% else %}
+                    <img src="{% static 'myapp/images/profilephototemplate.jpg' %}" class="avatar">
+                {% endif %}
+                <div>
+                    <h5 class="card-title">{{ user.username }}</h5>
+                    <p class="card-text">Name: {{ profile.real_name }}</p>
+                    <p class="card-text">Email: {{ profile.google_email }}</p>
+                    <p class="card-text">Date joined: {{ profile.date_joined|date:"m/d/Y" }}</p>
+                    <a href="{% url 'profile_update' %}" class="btn btn-primary mt-2">Edit Profile</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- action cards -->
+        <div class="d-flex w-100" style="gap: 24px;">
+
+            <div class="flex-grow-1" style="flex-basis: 50%;">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Upgrade Patron to Librarian</h5>
+                        <p class="card-text">Select a patron from the list and upgrade their role to Librarian.</p>
+                        <a href="{% url 'upgrade_patron' %}" class="btn btn-primary">Upgrade Patron</a>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Private Collection Approval Requests</h5>
+                        <p class="card-text">Approve a patron's request to see a private collection.</p>
+                        <a href="{% url 'librarian_request_approval' %}" class="btn btn-primary">Approve Requests</a>
+                    </div>
+                </div>
+            </div>
+
+            <div style="flex-basis: 50%;">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">Item Approval Requests</h5>
+                        <p class="card-text">Approve a patron's request to check out an item.</p>
+                        <a href="{% url 'view_borrow_requests' %}" class="btn btn-primary">Approve Requests</a>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title">View Listings</h5>
+                        <p class="card-text">Check it out.</p>
+                        <a href="{% url 'catalog' %}" class="btn btn-primary">Go to Catalog</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    {% include 'footer.html' %}
+</body>
+</html>

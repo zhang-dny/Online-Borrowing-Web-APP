@@ -1,0 +1,68 @@
+{% load static %}
+
+<style>
+    .navbar {
+        background-color: #1c1c1c;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 0.3rem 1rem;
+        min-height: 50px;
+    }
+    .navbar-brand, .nav-link {
+        color: white;
+        font-size: 1rem;
+    }
+    .navbar-brand:hover, .nav-link:hover {
+        color: #ddd;
+    }
+    .navbar-nav {
+        flex-direction: row;
+    }
+    .nav-link {
+        padding: 0.5rem 0.75rem;
+        text-decoration: none;
+    }
+    .btn-logout {
+        font-size: 0.9rem;
+        padding: 4px 10px;
+    }
+</style>
+
+<nav class="navbar">
+    <div class="container">
+        <div class="navbar-nav" style="max-width: 960px; width: 100%;">
+            <div class="d-flex justify-content-center">
+                <a class="navbar-brand" href="{% url 'redirect_user' %}">Library System</a>
+            </div>
+
+                <ul class="navbar-nav d-flex align-items-center gap-3 justify-content-end" style="flex-grow: 1;">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{%url 'redirect_user'%}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'catalog' %}">Catalog</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'collections' %}">Collections</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'current_items' %}">My Items</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="{% url 'account_logout' %}" class="btn btn-outline-light ms-auto btn-logout">Logout</a>
+                    </li>
+                </ul>
+
+        </div>
+    </div>
+    <li class="nav-item d-flex align-items-center" style="margin-top: -12px;">
+        <a href="{% url 'profile_update' %}" class="nav-link p-0">
+            {% if request.user.profile.profile_pic %}
+            <img src="{{ request.user.profile.profile_pic.url }}" alt="Profile"
+                style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid #fff;">
+            {% else %}
+            <img src="{% static 'myapp/default_blank_profile.png' %}" alt="Default Profile"
+                style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid #fff;">
+            {% endif %}
+        </a>
+    </li>
+</nav>

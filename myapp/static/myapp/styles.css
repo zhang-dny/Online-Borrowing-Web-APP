@@ -1,0 +1,232 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    overflow-y: auto;
+}
+
+
+h1 {
+    text-align: center;
+    margin: 40px 0 20px;
+    color: #333;
+    font-size: 2rem;
+}
+
+.catalog-container {
+    display: grid;
+    grid-template-columns: repeat(3, 300px);
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+}
+
+/* Catalog Item Box */
+.catalog-item {
+    background-color: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 30px;
+    width: 250px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.catalog-item:hover {
+    transform: scale(1.025);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+.product-image {
+    width: 150px;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    display: block;
+    margin: 0 auto;
+}
+/* item details */
+.catalog-item strong {
+    font-size: 1.5rem;
+    color: #222;
+}
+
+.catalog-item p {
+    margin: 10px 0;
+    font-size: 1rem;
+    color: #555;
+}
+
+.catalog-item .availability {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #5aea6f;
+}
+
+.button-container {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 15px;
+}
+
+
+.action-button {
+    background-color: #2ecc71;
+    border: none;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s;
+}
+.action-button:hover {
+    background-color: #27ae60;
+    transform: translateY(-1px);
+}
+.add-book{
+    position: fixed;  /* Makes it stay in one spot while scrolling */
+    bottom: 20px;     /* Distance from the bottom */
+    right: 20px;      /* Distance from the right */
+    background-color: #4CAF50; /* Green */
+    color: white;
+    padding: 12px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2); /* Adds a subtle shadow */
+    transition: background-color 0.3s ease-in-out;
+    z-index: 1000;  /* Ensures it stays above other elements */
+}
+.add-book:hover {
+    background-color: #27ae60;
+    transform: translateY(-1px) scale(1.025);
+}
+
+
+/* Back Link */
+a {
+    display: block;
+    text-align: center;
+    margin-top: 30px;
+    text-decoration: none;
+    color: #3498db;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+a:hover {
+    color: #21618c;
+    text-decoration: underline;
+}
+
+
+/*adding book mdal*/
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.modal-content form {
+    text-align: left; /* Better layout for labels/checkboxes */
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+/* Style individual fieldsets like checkbox groups */
+.modal-content ul {
+    max-height: 150px;
+    overflow-y: auto;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 6px;
+    margin-bottom: 15px;
+}
+input[type="text"],
+input[type="file"],
+textarea {
+    width: 90%;
+    padding: 10px;
+    margin: 5px auto;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    font-size: 16px;
+}
+
+
+input::placeholder,
+textarea::placeholder {
+    color: #aaa;
+    font-style: italic;
+}
+
+
+input:focus,
+textarea:focus {
+    outline: none;
+    border-color: #5cb85c;
+    box-shadow: 0 0 5px rgba(92, 184, 92, 0.5);
+}
+
+button[type="submit"] {
+    background-color: #9ce99c;
+    color: white;
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+button[type="submit"]:hover {
+    background-color: #000;
+    color:#27ae60
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    width: 450px;
+    box-shadow: 0px 0px 10px #000;
+    text-align: center;
+}
+
+/*collections*/
+.collection-list {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.collection-list li {
+    background-color: #f5f5f5;
+    margin-bottom: 10px;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.close {
+    float: right;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.card:hover {
+    border: 2px solid #007bff;
+    box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+    transform: scale(1.02);
+    transition: all 0.3s ease;
+}

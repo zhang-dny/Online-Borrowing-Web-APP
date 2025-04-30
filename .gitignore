@@ -1,0 +1,19 @@
+# Ignore virtual environment
+venv/
+.venv
+
+# Ignore compiled Python files
+__pycache__/
+
+# Ignore SQLite database (if using SQLite locally)
+db.sqlite3
+
+# Ignore IDE config files
+.idea/
+
+# Ignore the media files for local db
+media
+
+.env
+
+requirement2.txt

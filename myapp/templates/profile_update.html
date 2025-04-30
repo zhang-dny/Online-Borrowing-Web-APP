@@ -1,0 +1,182 @@
+{% load static %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Update Profile</title>
+    <link rel="stylesheet" href="{% static 'myapp/styles.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        main {
+            flex-grow: 1;
+        }
+        body {
+            background-color: #f8f9fa;
+            color: #212529;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .container {
+            max-width: 1200px;
+        }
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            background-color: #ffffff;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .btn-primary {
+            background-color: #5e72e4;
+            border-color: #5e72e4;
+            color: #ffffff;
+            font-weight: 500;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .btn-primary:hover {
+            background-color: #4856d1;
+            border-color: #4856d1;
+        }
+        .btn-secondary {
+            background-color: #000000;
+            border-color: #000000;
+            color: #ffffff;
+            font-weight: 500;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+        }
+        .btn-secondary:hover {
+            background-color: #28a745;
+            border-color: #28a745;
+            color: #ffffff;
+        }
+        .avatar {
+            width: 75%;
+            height: 75%;
+            border-radius: 50%;
+            margin-right: 15px;
+        }
+        .profile-form input {
+            margin-bottom: 15px;
+        }
+        body.dark-mode {
+            background-color: #121212;
+            color: #f8f9fa;
+        }
+        body.dark-mode .card {
+            background-color: #1e1e1e;
+            color: #ffffff;
+        }
+        body.dark-mode .btn-secondary {
+            background-color: #28a745;
+            border-color: #28a745;
+            color: #ffffff;
+        }
+        body.dark-mode .btn-primary:hover {
+            background-color: #28a745;
+            border-color: #28a745;
+            color: #ffffff;
+        }
+        .toggle-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background-color: #ffffff;
+            color: #000000;
+            border: 2px solid #000000;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+        body.dark-mode .toggle-btn {
+            background-color: #000000;
+            color: #ffffff;
+            border-color: #ffffff;
+        }
+    </style>
+</head>
+
+
+
+<body>
+
+    <!-- patron -->
+    {% if is_patron %}
+        {% include 'patronnavbar.html' %}
+    <!-- librarian -->
+    {% elif is_librarian %} 
+        {% include 'navbar.html' %}
+    {% endif %}
+
+<!-- <button onclick="toggleMode()" id="themeButton" class="toggle-btn">🌙 Dark Mode</button> -->
+<main class="flex-grow-1 d-flex justify-content-center align-items-center">
+    <div class="container w-100 d-flex flex-column justify-content-center align-items-center">
+    <div class="d-flex w-100" style="gap: 24px;">
+        <div class="flex-grow-1" style="flex-basis: 40%;">
+            <div class="card mb-4 h-100">
+                <div class="card-body">
+                    <div class="d-flex flex-column align-items-center w-75 mx-auto">
+                        {% if profile.profile_pic %}
+                            <img src="{{ profile.profile_pic.url }}" alt="Profile Picture" class="avatar">
+                        {% else %}
+                            <img src="{% static 'myapp/book_images/DefaultProfilePictureIcon.jpg' %}" alt="Default Profile Picture" class="avatar">
+                        {% endif %}
+                        <div class="profile-details">
+                            <h2>{{ profile.real_name }}</h2>
+                            <p><strong>Email:</strong> {{ profile.google_email }}</p>
+                            <p><strong>Date Joined:</strong> {{ profile.date_joined|date:"F j, Y" }}</p>
+
+                            {% if profile.profile_pic %}
+                            <form method="POST" action="{% url 'remove_profile_picture' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger btn-sm remove-pic-btn">Remove Profile Picture</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="flex-basis: 60%;">
+            {% block content %}
+            <div class="profile-container">
+                <h2>Update Profile</h2>
+
+                <form method="POST" enctype="multipart/form-data" class="profile-form">
+                    {% csrf_token %}
+
+                    <div class="form-group mb-3">
+                        <label for="real_name">Full Name:</label>
+                        <input type="text" name="real_name" id="real_name" value="{{ form.real_name.value }}" class="form-control">
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label for="profile_pic">Profile Picture:</label>
+                        <input type="file" name="profile_pic" id="profile_pic" class="form-control-file">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </form>
+
+                <div class="mt-4">
+                    <a href="{% url 'redirect_user' %}" class="btn btn-secondary">Back to Home</a>
+                </div>
+            </div>
+            {% endblock %}
+        </div>
+
+    </div>
+
+</div>
+
+</main>
+
+<hr class="mt-5">
+
+{% include 'footer.html' %}
+</body>
+</html>

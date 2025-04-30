@@ -1,0 +1,13 @@
+{% load socialaccount %}
+<html>
+<body>
+<h1>My Google OAuth Project </h1>
+{% if user.is_authenticated %}
+  <script type="text/javascript">
+    window.location.href = "{% url 'redirect_user' %}";
+  </script>
+{% else %}
+  <a href="{% provider_login_url 'google' %}?next=/">Login With Google</a>
+{% endif %}
+</body>
+</html>

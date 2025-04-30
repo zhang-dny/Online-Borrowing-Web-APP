@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ item.title }}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'myapp/styles.css' %}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+                background-color: #f8f9fa;
+            }
+        .header-bar {
+            background-color: #1c1c1c;
+            padding: 10px 30px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            color: white;
+        }
+        .catalog-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .catalog-item {
+            border: 1px solid #ccc;
+            padding: 15px;
+            width: 200px;
+            box-shadow: 1px 1px 5px #ddd;
+            border-radius: 5px;
+        }
+
+        .product-image {
+            width: 100%;
+            height: auto;
+            object-fit: cover;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+        .card-img-top {
+            max-height: 300px;
+            width: auto;
+            height: auto;
+            max-width: 100%;
+            object-fit: contain;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+
+        .card-body {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-body .card-text {
+            flex-grow: 1;
+        }
+
+        .catalog-item-buttons {
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body class="d-flex flex-column min-vh-100">
+    {% if messages %}
+        {% for message in messages %}
+        {% if 'item-detail' in message.tags %}
+            <div class="alert alert-success alert-dismissible fade show py-2 px-3 mx-auto shadow-sm w-75"
+                role="alert"
+                style="position: fixed; top: 90px; left: 0; right: 0; z-index: 1050; max-width: 500px;">
+            {{ message }}
+            <button type="button" class="btn-close position-absolute top-0 end-0" style="width: 5px; height: 5px;" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endif %}
+        {% endfor %}
+    {% endif %}
+
+    {% if request.user.is_authenticated %}
+    <a href="{% url 'profile_update' %}" style="position:absolute; top:1rem; right:1rem; z-index:1000;">
+      {% if request.user.profile.profile_pic %}
+        <img src="{{ request.user.profile.profile_pic.url }}" alt="Profile"
+             style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid #fff;">
+      {% else %}
+        <img src="{% static 'myapp/default_blank_profile.png' %}" alt="Default Profile"
+             style="width:40px; height:40px; border-radius:50%; object-fit:cover; border:2px solid #fff;">
+      {% endif %}
+    </a>
+    {% endif %}
+     <!-- patron -->
+    {% if request.user.is_authenticated and is_patron %}
+        {% include 'patronnavbar.html' %}
+    <!-- librarian -->
+    {% elif request.user.is_authenticated and not is_patron %} 
+        {% include 'navbar.html' %}
+    <!-- anon user -->
+    {% else %} 
+        {% include 'anonnavbar.html' %}
+    {% endif %}
+    <div class="header-bar">
+        <div class="container mt-4">
+          <h1>{{ item.title }}</h1>
+        </div>
+      </div>
+
+
+
+<main class="flex-grow-1 d-flex justify-content-center">
+<div class="container mt-4">
+
+    <!-- Carousel for all images -->
+    <div id="itemImageCarousel" class="carousel slide mb-4" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            {% for image in image_list %}
+            <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                <img src="{{ image.url }}" class="d-block w-100 rounded" alt="{% if image.is_main %}Main Image{% else %}Extra Image {{ forloop.counter }}{% endif %}">
+            </div>
+            {% endfor %}
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#itemImageCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#itemImageCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        </button>
+    </div>
+
+
+    <div class="row">
+        <div class="col-md-12">
+            {% if item.availability == "Available" %}
+            <div class="alert alert-info">This item is <strong>{{ item.availability }}</strong></div>
+            {% else %}
+            <div class="alert alert-warning">This item is <strong>{{ item.availability }}</strong></div>
+            {% endif %}
+            <p><strong>Description:</strong> {{ item.description }}</p>
+            <p><strong>Location:</strong> {{ item.location }}</p>
+            <p><strong>Availability:</strong> {{ item.availability }}</p>
+            {% if average_rating %}
+            <p><strong>Average Rating: </strong> {{ average_rating }}<p>
+            {% else %}
+                <p><strong>Average Rating:</strong> No ratings yet.<p>
+            {% endif %}           
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="mt-4">
+        <h3>Reviews</h3>
+        {% if reviews %}
+        {% for review in reviews %}
+        <div class="border rounded p-3 mb-3">
+            <p><strong>{{ review.user.username }}</strong> rated it {{ review.rating }}/5</p>
+            <p>{{ review.comment }}</p>
+            {% if review.user == request.user %}
+            <a href="{% url 'edit-review' review.id %}" class="btn btn-sm btn-warning">Edit</a>
+            <a href="{% url 'delete-review' review.id %}" class="btn btn-sm btn-danger">Delete</a>
+            {% endif %}
+        </div>
+        {% endfor %}
+        {% else %}
+        <p>No reviews yet.</p>
+        {% endif %}
+    </div>
+
+    {% if user.is_authenticated and is_patron %}
+        {% if not existing_review %}
+        <div class="mt-4">
+            <h4>Leave a Review</h4>
+            <form method="POST">
+                {% csrf_token %}
+                {{ review_form.non_field_errors }}
+
+                <div class="mb-3">
+                    {{ review_form.rating.label_tag }}
+                    {{ review_form.rating }}
+                    {{ review_form.rating.errors }}
+                </div>
+
+                <div class="mb-3">
+                    {{ review_form.comment.label_tag }}
+                    {{ review_form.comment }}
+                    {{ review_form.comment.errors }}
+                </div>
+
+                <button type="submit" class="btn btn-primary">Submit Review</button>
+            </form>
+        </div>
+        {% else %}
+        <div class="alert alert-info mt-3">You've already submitted a review.</div>
+        {% endif %}
+    {% elif user.is_authenticated and is_librarian %}
+        {% if item.availability == "Checked Out" %}
+            <h3>Send Notification</h3>
+            <div class="alert alert-warning mt-3">
+                <p>This item is checked out by {{ user.username }}</p>
+            </div>
+            {% if borrower %}
+            <div class="card mt-4 p-3">
+
+                <h5>Send Notification to: <strong>{{ user.username }}</strong></h5>
+
+                <form method="POST">
+                    {% csrf_token %}
+                    {{ notification_form.as_p }}
+                    <button type="submit" name="notification_submit" class="btn btn-primary">Send</button>
+                </form>
+            </div>
+            {% endif %}
+        {% endif %}
+    {% else %}
+        <div class="alert alert-warning mt-3">
+            <p><a href="{% url 'account_login' %}">Log in to leave a review.</a></p>
+        </div>
+    {% endif %}
+
+</div>
+</main>
+
+{% include 'footer.html' %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    setTimeout(function() {
+      const alerts = document.querySelectorAll('.alert-success');
+      alerts.forEach(function(alert) {
+        alert.classList.remove('show');
+        alert.classList.add('fade');
+        setTimeout(() => {
+          alert.remove();
+        }, 500);
+      });
+    }, 3000);
+</script>
+  
+</body>
+</html>
